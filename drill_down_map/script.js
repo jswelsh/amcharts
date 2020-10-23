@@ -1,61 +1,100 @@
-// Create map instance
+/**
+ * ---------------------------------------
+ * This demo was created using amCharts 4.
+ * 
+ * For more information visit:
+ * https://www.amcharts.com/
+ * 
+ * Documentation is available at:
+ * https://www.amcharts.com/docs/v4/
+ * ---------------------------------------
+ */
+
+const continents = {
+  "AF": 0,
+  "AN": 1,
+  "AS": 2,
+  "EU": 3,
+  "NA": 4,
+  "OC": 5,
+  "SA": 6
+}
+
+// Themes begin
 am4core.useTheme(am4themes_animated);
 
-// Create map instance
+/* Create map instance */
 let chart = am4core.create("chartdiv", am4maps.MapChart);
-
-// Set map definition
-chart.geodata = am4geodata_worldLow;
-
-// Set projection
 chart.projection = new am4maps.projections.Miller();
 
-// World series
+// Create map polygon series for world map
 let worldSeries = chart.series.push(new am4maps.MapPolygonSeries());
-worldSeries.exclude = ["AQ"];
 worldSeries.useGeodata = true;
-worldSeries.mapPolygons.template.tooltipText = "{name}";
-worldSeries.mapPolygons.template.fill = am4core.color("#74B266");
+worldSeries.geodata = am4geodata_worldLow;
+worldSeries.exclude = ["AQ"];
 
-let worldHover = worldSeries.mapPolygons.template.states.create("hover");
-worldHover.properties.fill = am4core.color("#367B25");
+let  worldPolygon = worldSeries.mapPolygons.template;
+worldPolygon.tooltipText = "{name}";
+worldPolygon.nonScalingStroke = true;
+worldPolygon.strokeOpacity = 0.5;
+worldPolygon.fill = am4core.color("#eee");
+worldPolygon.propertyFields.fill = "color";
 
-// Country series
+var hs = worldPolygon.states.create("hover");
+hs.properties.fill = chart.colors.getIndex(9);
+
+
+// Create country specific series (but hide it for now)
 let countrySeries = chart.series.push(new am4maps.MapPolygonSeries());
-countrySeries.mapPolygons.template.tooltipText = "{name}";
-countrySeries.mapPolygons.template.fill = am4core.color("#74B266");
+countrySeries.useGeodata = true;
 countrySeries.hide();
-
-let countryHover = countrySeries.mapPolygons.template.states.create("hover");
-countryHover.properties.fill = am4core.color("#367B25");
-
 countrySeries.geodataSource.events.on("done", function(ev) {
   worldSeries.hide();
   countrySeries.show();
 });
 
-worldSeries.mapPolygons.template.events.on("hit", function(ev) {
-    let chart = ev.target.series.chart;
-  
-  // Zoom to clicked element
-  chart.zoomToMapObject(ev.target);
-  // ...
-  let map;
-  switch(ev.target.dataItem.dataContext.id) {
-    case "US":
-      map = "usaLow";
-      break;
-    case "FR":
-      map = "franceLow";
-      break;
-  }
+let countryPolygon = countrySeries.mapPolygons.template;
+countryPolygon.tooltipText = "{name}";
+countryPolygon.nonScalingStroke = true;
+countryPolygon.strokeOpacity = 0.5;
+countryPolygon.fill = am4core.color("#eee");
 
-  if (map){
+var hs = countryPolygon.states.create("hover");
+hs.properties.fill = chart.colors.getIndex(9);
+// Set up click events
+worldPolygon.events.on("hit", function(ev) {
+  drillDown(ev.target)
+});
+
+function drillDown(target) {
+  target.series.chart.zoomToMapObject(target);
+  var map = target.dataItem.dataContext.map;
+  if (map) {
+    target.isHover = false;
     countrySeries.geodataSource.url = "https://cdn.amcharts.com/lib/4/geodata/json/" + map + ".json";
     countrySeries.geodataSource.load();
+    back.show();
   }
-});
-let back = chart.createChild(am4core.ZoomOutButton);
+}
+
+// Set up data for countries
+var data = [];
+for(var id in am4geodata_data_countries2) {
+  if (am4geodata_data_countries2.hasOwnProperty(id)) {
+    var country = am4geodata_data_countries2[id];
+    if (country.maps.length) {
+      data.push({
+        id: id,
+        color: chart.colors.getIndex(continents[country.continent_code]),
+        map: country.maps[0]
+      });
+    }
+  }
+}
+worldSeries.data = data;
+
+// Add zoomout button
+var back = chart.createChild(am4core.ZoomOutButton);
 back.align = "right";
 back.hide();
 back.events.on("hit", function(ev) {
@@ -64,3 +103,23 @@ back.events.on("hit", function(ev) {
   countrySeries.hide();
   back.hide();
 });
+
+
+var currentHover;
+
+worldPolygon.events.on("over", function(ev) {
+  currentHover = ev.target;
+});
+
+worldPolygon.events.on("out", function(ev) {
+  if (currentHover == ev.target) {
+    currentHover = undefined;
+  }
+});
+
+
+chart.chartContainer.events.on("wheel", function(ev) {
+  if ((chart.zoomLevel > 2) && currentHover) {
+    drillDown(currentHover);
+  }
+});;
