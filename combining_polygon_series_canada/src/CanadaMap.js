@@ -25,26 +25,26 @@ export default function CanadaMap(props) {
   chart.geodata = am4geodata_region_canada_canadaCountiesLow
   chart.projection = new am4maps.projections.Miller();
   
-  let countySeries = chart.series.push(new am4maps.MapPolygonSeries());
-  countySeries.geodata = am4geodata_region_canada_canadaCountiesLow;
-  countySeries.useGeodata = true;
+  let districtSeries = chart.series.push(new am4maps.MapPolygonSeries());
+  districtSeries.geodata = am4geodata_region_canada_canadaCountiesLow;
+  districtSeries.useGeodata = true;
 
-  let stateSeries = chart.series.push(new am4maps.MapPolygonSeries());
-  stateSeries.geodata = am4geodata_canadaLow;
-  stateSeries.mapPolygons.template.fillOpacity = 0;
-  stateSeries.mapPolygons.template.strokeWidth = 2;
-  stateSeries.mapPolygons.template.stroke = chart.colors.getIndex(7);
-  stateSeries.mapPolygons.template.interactionsEnabled = false;
+  let provincialSeries = chart.series.push(new am4maps.MapPolygonSeries());
+  provincialSeries.geodata = am4geodata_canadaLow;
+  provincialSeries.mapPolygons.template.fillOpacity = 0;
+  provincialSeries.mapPolygons.template.strokeWidth = 2;
+  provincialSeries.mapPolygons.template.stroke = chart.colors.getIndex(7);
+  provincialSeries.mapPolygons.template.interactionsEnabled = false;
   
   
-  var polygonTemplate = countySeries.mapPolygons.template;
+  var polygonTemplate = districtSeries.mapPolygons.template;
   polygonTemplate.tooltipText = "{name}";
   polygonTemplate.fill =  chart.colors.getIndex(18);/* am4core.getIndex(10); */
 
   polygonTemplate
     .states.create("hover")
     .properties
-    .fill = chart.colors.getIndex(9)
+    .fill = chart.colors.getIndex(7)
 
   return () => {
       chart.dispose();
