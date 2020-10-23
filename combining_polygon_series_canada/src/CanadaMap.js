@@ -3,7 +3,7 @@ import React, { useRef, useLayoutEffect } from 'react';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import * as am4maps from '@amcharts/amcharts4/maps';
-/* import am4geodata_canadaLow from '@amcharts/amcharts4-geodata/canadaLow'; */
+import am4geodata_canadaLow from '@amcharts/amcharts4-geodata/canadaLow';
 import am4geodata_region_canada_canadaCountiesLow from '@amcharts/amcharts4-geodata/region/canada/canadaCountiesLow'
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 import useWindowDimensions from './useWindowDimensions'
@@ -25,13 +25,21 @@ export default function CanadaMap(props) {
   chart.geodata = am4geodata_region_canada_canadaCountiesLow
   chart.projection = new am4maps.projections.Miller();
   
-  var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
-  polygonSeries.geodata = am4geodata_region_canada_canadaCountiesLow
-  polygonSeries.useGeodata = true;
+  let countySeries = chart.series.push(new am4maps.MapPolygonSeries());
+  countySeries.geodata = am4geodata_region_canada_canadaCountiesLow;
+  countySeries.useGeodata = true;
+
+  let stateSeries = chart.series.push(new am4maps.MapPolygonSeries());
+  stateSeries.geodata = am4geodata_canadaLow;
+  stateSeries.mapPolygons.template.fillOpacity = 0;
+  stateSeries.mapPolygons.template.strokeWidth = 2;
+  stateSeries.mapPolygons.template.stroke = chart.colors.getIndex(7);
+  stateSeries.mapPolygons.template.interactionsEnabled = false;
   
-  var polygonTemplate = polygonSeries.mapPolygons.template;
+  
+  var polygonTemplate = countySeries.mapPolygons.template;
   polygonTemplate.tooltipText = "{name}";
-  polygonTemplate.fill =  chart.colors.getIndex(9);/* am4core.getIndex(10); */
+  polygonTemplate.fill =  chart.colors.getIndex(18);/* am4core.getIndex(10); */
 
   polygonTemplate
     .states.create("hover")
