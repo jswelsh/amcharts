@@ -29,25 +29,32 @@ countrySeries.hide();
 let countryHover = countrySeries.mapPolygons.template.states.create("hover");
 countryHover.properties.fill = am4core.color("#367B25");
 
-// Add hit events
+countrySeries.geodataSource.events.on("done", function(ev) {
+  worldSeries.hide();
+  countrySeries.show();
+});
+
 worldSeries.mapPolygons.template.events.on("hit", function(ev) {
-  
-  // Get chart object
-  let chart = ev.target.series.chart;
+    let chart = ev.target.series.chart;
   
   // Zoom to clicked element
   chart.zoomToMapObject(ev.target);
-  
-  // Transition to state map of it's U.S.
-  if (ev.target.dataItem.dataContext.id == "US") {
-    worldSeries.hide();
-    countrySeries.geodata = am4geodata_usaLow;
-    countrySeries.show();
-    back.show();
+  // ...
+  let map;
+  switch(ev.target.dataItem.dataContext.id) {
+    case "US":
+      map = "usaLow";
+      break;
+    case "FR":
+      map = "franceLow";
+      break;
+  }
 
+  if (map){
+    countrySeries.geodataSource.url = "https://cdn.amcharts.com/lib/4/geodata/json/" + map + ".json";
+    countrySeries.geodataSource.load();
   }
 });
-
 let back = chart.createChild(am4core.ZoomOutButton);
 back.align = "right";
 back.hide();
