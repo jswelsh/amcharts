@@ -5,10 +5,14 @@ import * as am4core from '@amcharts/amcharts4/core';
 import * as am4maps from '@amcharts/amcharts4/maps';
 import am4geodata_canadaLow from '@amcharts/amcharts4-geodata/canadaLow';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
+import useWindowDimensions from './useWindowDimensions'
+
 /* import am4themes_dark from '@amcharts/amcharts4/themes/dark';
  */ am4core.useTheme(am4themes_animated);
+
 export default function CanadaMap(props) {
- const chart = useRef(null);
+  const { height, width } = useWindowDimensions();
+  const chart = useRef(null);
   // Themes begin
   useLayoutEffect(() => {
   
@@ -29,19 +33,26 @@ export default function CanadaMap(props) {
   // Configure series
   var polygonTemplate = polygonSeries.mapPolygons.template;
   polygonTemplate.tooltipText = "{name}";
-  polygonTemplate.fill =  am4core.color("#367B25");/* am4core.getIndex(10); */
+  polygonTemplate.fill =  chart.colors.getIndex(9);/* am4core.getIndex(10); */
   /* 
   usPolygonTemplate.nonScalingStroke = true;
   */
   
   // Create hover state and set alternative fill color
   var hs = polygonTemplate.states.create("hover");
-  hs.properties.fill =  am4core.color("#367B25")/*  am4core.getIndex(9); */
- return () => {
+  hs.properties.fill = chart.colors.getIndex(9)
+
+  
+  
+
+  return () => {
       chart.dispose();
     };
   }, []); 
+    let x = height+'px'
+  let y = width+'px'
+  console.log(x, width)
   return(
-    <div id="chartdiv" style={{ width: "100%",height: '400px'}}></div>
+    <div id="chartdiv" style={{ width: y,height: x}}></div>
   )
 }
