@@ -29,6 +29,11 @@ export default function CanadaMap(props) {
   districtSeries.geodata = am4geodata_region_canada_canadaCountiesLow;
   districtSeries.useGeodata = true;
 
+  districtSeries.mapPolygons.template.events.on("over", function(event) {
+    event.target.zIndex = Number.MAX_VALUE;
+    event.target.toFront();
+  });
+
   let provincialSeries = chart.series.push(new am4maps.MapPolygonSeries());
   provincialSeries.geodata = am4geodata_canadaLow;
   provincialSeries.mapPolygons.template.fillOpacity = 0;
@@ -41,10 +46,14 @@ export default function CanadaMap(props) {
   polygonTemplate.tooltipText = "{name}";
   polygonTemplate.fill =  chart.colors.getIndex(18);/* am4core.getIndex(10); */
 
-  polygonTemplate
+  let hoverState = districtSeries.mapPolygons.template.states.create("hover");
+  hoverState.properties.fill = chart.colors.getIndex(4);
+  hoverState.properties.stroke =chart.colors.getIndex(25);
+  hoverState.properties.strokeWidth = 5;
+/*   polygonTemplate
     .states.create("hover")
     .properties
-    .fill = chart.colors.getIndex(7)
+    .fill = chart.colors.getIndex(7) */
 
   return () => {
       chart.dispose();
