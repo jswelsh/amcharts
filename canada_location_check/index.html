@@ -31,8 +31,22 @@
               title = am4geodata_data_countries2[ geo.country_code ][ "country" ];
             }
           }
-      }
+           var chart = am4core.create("chartdiv", am4maps.MapChart);
+          chart.titles.create().text = title;
+          chart.geodataSource.url = "https://www.amcharts.com/lib/4/geodata/json/" + currentMap + ".json";
+          chart.geodataSource.events.on("parseended", function(ev) {
+            var data = [];
+            for(var i = 0; i < ev.target.data.features.length; i++) {
+              data.push({
+                id: ev.target.data.features[i].id,
+                value: Math.round( Math.random() * 10000 )
+              })
+            }
+            polygonSeries.data = data;
+          })
 
+
+      }
     )
   }
 
