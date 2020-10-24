@@ -1,53 +1,97 @@
-<!-- Styles -->
-<style>
-#chartdiv {
-  width: 100%;
-  height: 500px
-}
+<head>
+  <!-- Styles -->
+  <style>
+  /* #chartdiv {
+    width: 100%;
+    height: 500px
+  } */
 
-</style>
+  </style>
 
-<!-- Resources -->
-<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/maps.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/geodata/data/countries2.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+  <!-- Resources -->
+  <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/maps.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/geodata/data/countries2.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
 
+<body>
 <!-- Chart code -->
-<script>
-  am4core.ready(function() {
-  am4core.useTheme(am4themes_animated);
-  window.onload = function() {
-    jQuery.getJSON(
-      "https://www.amcharts.com/tools/country/?v=xz6Z", 
-      function( geo ) {  
-        var defaultMap = "usaAlbersLow";
-        var currentMap = defaultMap;
-        var title = "";
-          if ( am4geodata_data_countries2[ geo.country_code ] !== undefined ) {
-            currentMap = am4geodata_data_countries2[ geo.country_code ][ "maps" ][ 0 ];
-            // add country title
-            if ( am4geodata_data_countries2[ geo.country_code ][ "country" ] ) {
-              title = am4geodata_data_countries2[ geo.country_code ][ "country" ];
-            }
+  <script>
+    am4core.ready(function() {
+    am4core.useTheme(am4themes_animated);
+    window.onload = function() {
+      $.getJSON('http://ip-api.com/json/162.156.80.155',function( geo ) {
+        let defaultMap = "usaAlbersLow";
+        let currentMap = defaultMap;
+        console.log(geo.countryCode)
+        let title = "";
+        if ( am4geodata_data_countries2[ geo.countryCode ] !== undefined ) {
+          currentMap = am4geodata_data_countries2[ geo.countryCode ][ "maps" ][ 0 ];
+          if ( am4geodata_data_countries2[ geo.countryCode ][ "country" ] ) {
+            title = am4geodata_data_countries2[ geo.countryCode ][ "country" ];
           }
-           var chart = am4core.create("chartdiv", am4maps.MapChart);
-          chart.titles.create().text = title;
-          chart.geodataSource.url = "https://www.amcharts.com/lib/4/geodata/json/" + currentMap + ".json";
-          chart.geodataSource.events.on("parseended", function(ev) {
-            var data = [];
-            for(var i = 0; i < ev.target.data.features.length; i++) {
-              data.push({
-                id: ev.target.data.features[i].id,
-                value: Math.round( Math.random() * 10000 )
-              })
-            }
-            polygonSeries.data = data;
-          })
+        
+        }
+        let chart = am4core.create("chartdiv", am4maps.MapChart);
+        chart.titles.create().text = title;
+        chart.geodataSource.url = "https://www.amcharts.com/lib/4/geodata/json/" + currentMap + ".json";
+        chart.geodataSource.events.on("parseended", function(ev) {
+          let data = [];
+          for(let i = 0; i < ev.target.data.features.length; i++) {
+            data.push({
+              id: ev.target.data.features[i].id,
+              value: Math.round( Math.random() * 10000 )
+            })
+          }
+          polygonSeries.data = data;
+        })
+      
+        chart.projection = new am4maps.projections.Mercator();
+      
+        let polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+      
+        polygonSeries.heatRules.push({
+          property: "fill",
+          target: polygonSeries.mapPolygons.template,
+          min: chart.colors.getIndex(1).brighten(1),
+          max: chart.colors.getIndex(1).brighten(-0.3)
+        });
+      
+        polygonSeries.useGeodata = true;
+      
+        let heatLegend = chart.createChild(am4maps.HeatLegend);
+        heatLegend.series = polygonSeries;
+        heatLegend.align = "right";
+        heatLegend.width = am4core.percent(25);
+        heatLegend.marginRight = am4core.percent(4);
+        heatLegend.minValue = 0;
+        heatLegend.maxValue = 40000000;
+        heatLegend.valign = "bottom";
+      
+        let minRange = heatLegend.valueAxis.axisRanges.create();
+        minRange.value = heatLegend.minValue;
+        minRange.label.text = "Little";
+        let maxRange = heatLegend.valueAxis.axisRanges.create();
+        maxRange.value = heatLegend.maxValue;
+        maxRange.label.text = "A lot!";
+      
+        heatLegend.valueAxis.renderer.labels.template.adapter.add("text", function(labelText) {
+          return "";
+        });
+      
+        let polygonTemplate = polygonSeries.mapPolygons.template;
+        polygonTemplate.tooltipText = "{name}: {value}";
+        polygonTemplate.nonScalingStroke = true;
+        polygonTemplate.strokeWidth = 0.5;
+      
+        let hs = polygonTemplate.states.create("hover");
+        hs.properties.fill = chart.colors.getIndex(1).brighten(-0.5);
+      });
+    };
 
-
-      }
-    )
-  }
-
-</script>
+    }); // end am4core.ready()
+  </script>
+  <div id="chartdiv"></div>
+</body>
