@@ -25,7 +25,7 @@ const  worldPolygon = worldSeries.mapPolygons.template;
 worldPolygon.tooltipText = "{name}";
 worldPolygon.nonScalingStroke = true;
 worldPolygon.strokeOpacity = 0.5;
-worldPolygon.fill = am4core.color("#eee");
+worldPolygon.fill = am4core.color("#740202");
 worldPolygon.propertyFields.fill = "color";
 
 worldPolygon
