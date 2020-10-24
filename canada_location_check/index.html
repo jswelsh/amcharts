@@ -15,5 +15,25 @@
 
 <!-- Chart code -->
 <script>
+  am4core.ready(function() {
+  am4core.useTheme(am4themes_animated);
+  window.onload = function() {
+    jQuery.getJSON(
+      "https://www.amcharts.com/tools/country/?v=xz6Z", 
+      function( geo ) {  
+        var defaultMap = "usaAlbersLow";
+        var currentMap = defaultMap;
+        var title = "";
+          if ( am4geodata_data_countries2[ geo.country_code ] !== undefined ) {
+            currentMap = am4geodata_data_countries2[ geo.country_code ][ "maps" ][ 0 ];
+            // add country title
+            if ( am4geodata_data_countries2[ geo.country_code ][ "country" ] ) {
+              title = am4geodata_data_countries2[ geo.country_code ][ "country" ];
+            }
+          }
+      }
+
+    )
+  }
 
 </script>
