@@ -27,6 +27,7 @@
         let currentMap = defaultMap;
         console.log(geo.countryCode)
         let title = "";
+        
         if ( am4geodata_data_countries2[ geo.countryCode ] !== undefined ) {
           currentMap = am4geodata_data_countries2[ geo.countryCode ][ "maps" ][ 0 ];
           if ( am4geodata_data_countries2[ geo.countryCode ][ "country" ] ) {
