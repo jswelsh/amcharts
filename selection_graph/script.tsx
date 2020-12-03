@@ -16,9 +16,76 @@ am4core.ready(function() {
   // Create map polygon series
   var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
   polygonSeries.mapPolygons.template.strokeWidth = 0.5;
-  
+  /* 
+  CAD : 'CA',
+  HKD : 'HK',
+  ISK : 'IS',
+  PHP : 'PH',
+  DKK : 'DK',
+  HUF : 'HU',
+  CZK : 'CZ',
+  GBP : 'GB',
+  RON : 'RO',
+  SEK : 'SE',
+  IDR : 'ID',
+  INR : 'IN',
+  BRL : 'BR',
+  RUB : 'RU',
+  HRK : 'HR',
+  JPY : 'JP',
+  THB : 'TH',
+  CHF : 'CH',
+  EUR : 'EUROPEAN_UNION',
+  MYR : 'MY',
+  BGN : 'BG',
+  TRY : 'TR',
+  CNY : 'CN',
+  NOK : 'NO',
+  NZD : 'NZ',
+  ZAR : 'ZA',
+  USD : 'US',
+  MXN : 'MX',
+  SGD : 'SG',
+  AUD : 'AU',
+  ILS : 'IL',
+  KRW : 'KR',
+  PLN : 'PL'
+}
+  */
   // Exclude Antartica
-  polygonSeries.exclude = ["AQ"];
+  polygonSeries.include = ['CA',
+  'HK',
+  'IS',
+  'PH',
+  'DK',
+  'HU',
+  'CZ',
+  'GB',
+  'RO',
+  'SE',
+  'ID',
+  'IN',
+  'BR',
+  'RU',
+  'HR',
+  'JP',
+  'TH',
+  'CH',
+  'MY',
+  'BG',
+  'TR',
+  'CN',
+  'NO',
+  'NZ',
+  'ZA',
+  'US',
+  'MX',
+  'SG',
+  'AU',
+  'IL',
+  'KR',
+  'PL',
+  'EU']
   
   // Make map load polygon (like country names) data from GeoJSON
   polygonSeries.useGeodata = true;
