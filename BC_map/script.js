@@ -1,11 +1,21 @@
 var chart = am4core.create("chartdiv", am4maps.MapChart);
 
 // Set map definition
-chart.geodata = am4geodata_region_canada_bcLow;
-
+// chart.geodata = am4geodata_region_canada_bcLow;
+try {
+  chart.geodata = am4geodata_region_canada_bcLow;
+}
+catch (e) {
+  chart.raiseCriticalError(new Error("Map geodata could not be loaded. Please download the latest <a href=\"https://www.amcharts.com/download/download-v4/\">amcharts geodata</a> and extract its contents into the same directory as your amCharts files."));
+}
 // Set projection
 chart.projection = new am4maps.projections.Miller();
 
+
+// zoomout on background click
+// chart.chartContainer.background.events.on("hit", function () { zoomOut() });
+// var colorSet = new am4core.ColorSet();
+// var morphedPolygon;
 
 
 var groupData = [
@@ -95,29 +105,83 @@ groupData.forEach(function(group) {
 
   // district shape properties & behaviors
   var mapPolygonTemplate = series.mapPolygons.template;
-  // Instead of our custom title, we could also use {name} which comes from geodata  
+  // Instead of our custom title, we could also use {name} which comes from geodata
+  mapPolygonTemplate.stroke = am4core.color("#03fcc6");
+  mapPolygonTemplate.strokeOpacity = .9;
   mapPolygonTemplate.fill = am4core.color(group.color);
-  mapPolygonTemplate.fillOpacity = 0.8;
+  mapPolygonTemplate.fillOpacity = 0.9;
   mapPolygonTemplate.nonScalingStroke = true;
   mapPolygonTemplate.tooltipPosition = "fixed"
 
-  mapPolygonTemplate.events.on("over", function(event) {
-    series.mapPolygons.each(function(mapPolygon) {
-      mapPolygon.isHover = true;
-    })
-    event.target.isHover = false;
-    event.target.isHover = true;
+  // desaturate filter for countries
+  var desaturateFilter = new am4core.DesaturateFilter();
+  desaturateFilter.saturation = 0.45;
+  mapPolygonTemplate.filters.push(desaturateFilter);
+
+  // set fillOpacity to 1 when hovered
+  var hoverState = mapPolygonTemplate.states.create("hover");
+  hoverState.properties.fillOpacity = 1;
+
+
+  // what to do when country is clicked
+  mapPolygonTemplate.events.on("hit", function (event) {
+    event.target.zIndex = 1000000;
+    selectPolygon(event.target);
   })
 
+  // Pie chart
+  var pieChart = chart.seriesContainer.createChild(am4charts.PieChart);
+  // Set width/heigh of a pie chart for easier positioning only
+  pieChart.width = 100;
+  pieChart.height = 100;
+  pieChart.hidden = true; // can't use visible = false!
+  // because defaults are 50, and it's not good with small districts
+  pieChart.chartContainer.minHeight = 1;
+  pieChart.chartContainer.minWidth = 1;
+
+  var pieSeries = pieChart.series.push(new am4charts.PieSeries());
+  pieSeries.dataFields.value = "value";
+  pieSeries.dataFields.category = "category";
+  pieSeries.data = [{ value: 100, category: "First" }, { value: 20, category: "Second" }, { value: 10, category: "Third" }];
+  
+  var dropShadowFilter = new am4core.DropShadowFilter();
+  dropShadowFilter.blur = 4;
+  pieSeries.filters.push(dropShadowFilter);
+
+  var sliceTemplate = pieSeries.slices.template;
+  sliceTemplate.fillOpacity = 1;
+  sliceTemplate.strokeOpacity = 0;
+
+  var activeState = sliceTemplate.states.getKey("active");
+  activeState.properties.shiftRadius = 0; // no need to pull on click, as country circle under the pie won't make it good
+  
+  var sliceHoverState = sliceTemplate.states.getKey("hover");
+  sliceHoverState.properties.shiftRadius = 0; // no need to pull on click, as country circle under the pie won't make it good
+  
+  // we don't need default pie chart animation, so change defaults
+  var hiddenState = pieSeries.hiddenState;
+  hiddenState.properties.startAngle = pieSeries.startAngle;
+  hiddenState.properties.endAngle = pieSeries.endAngle;
+  hiddenState.properties.opacity = 0;
+  hiddenState.properties.visible = false;
+
+  /* 
   mapPolygonTemplate.events.on("out", function(event) {
     series.mapPolygons.each(function(mapPolygon) {
       mapPolygon.isHover = false;
     })
   })
-
+  
+  mapPolygonTemplate.events.on("over", function(event) {
+      series.mapPolygons.each(function(mapPolygon) {
+        mapPolygon.isHover = true;
+      })
+      event.target.isHover = false;
+      event.target.isHover = true;
+    }) */
   // States  
-  var hoverState = mapPolygonTemplate.states.create("hover");
-  hoverState.properties.fill = am4core.color("#e8115d");
+ /*  var hoverState = mapPolygonTemplate.states.create("hover");
+  hoverState.properties.fill = am4core.color("#e8115d"); */
 
   // Tooltip
   mapPolygonTemplate.tooltipText = "{CDNAME}"; // enables tooltip
@@ -138,7 +202,7 @@ groupData.forEach(function(group) {
 // var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
 
 // Make map load polygon (like country names) data from GeoJSON
-polygonSeries.useGeodata = true;
+// mapPolygonTemplate.useGeodata = true;//maybe redundant
 
 console.table(am4geodata_region_canada_bcLow)
 // Configure series
