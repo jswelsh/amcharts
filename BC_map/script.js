@@ -14,13 +14,12 @@
 am4core.useTheme(am4themes_animated);
 // Themes end
 
-
-
 var chart = am4core.create("chartdiv", am4maps.MapChart);
 
 
 try {
-    chart.geodata = am4geodata_region_canada_bcLow;
+    chart.geodataSource.url = 'CEN_ECONOMIC_REGIONS_SVW.geojson'
+    // chart.geodata = am4geodata_region_canada_bcLow;
     // _bcHigh;
 }
 catch (e) {
@@ -38,8 +37,6 @@ var morphedPolygon;
 // map polygon series (countries)
 var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
 polygonSeries.useGeodata = true;
-// specify which countries to include
-// polygonSeries.include = ["IT", "CH", "FR", "DE", "GB", "ES", "PT", "IE", "NL", "LU", "BE", "AT", "DK"]
 
 // country area look and behavior
 var polygonTemplate = polygonSeries.mapPolygons.template;
