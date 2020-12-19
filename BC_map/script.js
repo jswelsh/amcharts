@@ -1,264 +1,151 @@
-/**
- * ---------------------------------------
- * This demo was created using amCharts 4.
- * 
- * For more information visit:
- * https://www.amcharts.com/
- * 
- * Documentation is available at:
- * https://www.amcharts.com/docs/v4/
- * ---------------------------------------
- */
-
-// Themes begin
-am4core.useTheme(am4themes_animated);
-// Themes end
-
 var chart = am4core.create("chartdiv", am4maps.MapChart);
 
+// Set map definition
+chart.geodata = am4geodata_region_canada_bcLow;
 
-try {
-    chart.geodataSource.url = 'CEN_ECONOMIC_REGIONS_SVW.geojson'
-    // chart.geodata = am4geodata_region_canada_bcLow;
-    // _bcHigh;
-}
-catch (e) {
-    chart.raiseCriticalError(new Error("Map geodata could not be loaded."));
-}
+// Set projection
+chart.projection = new am4maps.projections.Miller();
 
-chart.projection = new am4maps.projections.Mercator();
 
-// zoomout on background click
-chart.chartContainer.background.events.on("hit", function () { zoomOut() });
 
-var colorSet = new am4core.ColorSet();
-var morphedPolygon;
+var groupData = [
+  {
+    "name": "North East/Nechako",
+    "color": chart.colors.getIndex(0),
+    "data": [
+      { id: "5959" },
+      { id: "5955" }]
+  },
+  {
+    "name": "North Coast",
+    "color": chart.colors.getIndex(1),
+    "data": [
+      { id: "5957" },
+      { id: "5949" },
+      { id: "5951" },
+      { id: "5947" }, ]
+  },
+  {
+    "name": "Cariboo",
+    "color": chart.colors.getIndex(2),
+    "data": [
+      { id: "5953" }, 
+      { id: "5941" }]
+  },
+  {
+    "name": "Thompson-Okanagan",
+    "color": chart.colors.getIndex(3),
+    "data": [
+      { id: "5939" },
+      { id: "5937" }, 
+      { id: "5935" },
+      { id: "5933" },
+      { id: "5907" },]
+  },  
+  {
+    "name": "Kootenay",
+    "color": chart.colors.getIndex(4),
+    "data": [
+      { id: "5901" },
+      { id: "5903" },
+      { id: "5905" },]
+  },  
+  {
+    "name": "Mainland/South West",
+    "color": chart.colors.getIndex(5),
+    "data": [
+      { id: "5909" },
+      { id: "5915" },
+      { id: "5929" },
+      { id: "5931" },]
+  },  
+  {
+    "name": "Vancouver Island/Coast",
+    "color": chart.colors.getIndex(6),
+    "data": [
+      { id: "5945" },
+      { id: "5943" },
+      { id: "5927" },
+      { id: "5926" },
+      { id: "5924" },
+      { id: "5923" },
+      { id: "5921" },
+      { id: "5919" },
+      { id: "5917" },
+    ]
+  }
+]
 
-// map polygon series (countries)
-var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+groupData.forEach(function(group) {
+  var series = chart.series.push(new am4maps.MapPolygonSeries())
+  series.name = group.name;
+  series.useGeodata = true;
+  var includedCountries = [];
+  group.data.forEach(function(district) {
+    includedCountries.push(district.id);
+    // excludedCountries.push(district.id);
+  });
+  series.include = includedCountries;
+
+  series.fill = am4core.color(group.color);
+
+  series.setStateOnChildren = true;
+  series.calculateVisualCenter = true;
+
+
+  // district shape properties & behaviors
+  var mapPolygonTemplate = series.mapPolygons.template;
+  // Instead of our custom title, we could also use {name} which comes from geodata  
+  mapPolygonTemplate.fill = am4core.color(group.color);
+  mapPolygonTemplate.fillOpacity = 0.8;
+  mapPolygonTemplate.nonScalingStroke = true;
+  mapPolygonTemplate.tooltipPosition = "fixed"
+
+  mapPolygonTemplate.events.on("over", function(event) {
+    series.mapPolygons.each(function(mapPolygon) {
+      mapPolygon.isHover = true;
+    })
+    event.target.isHover = false;
+    event.target.isHover = true;
+  })
+
+  mapPolygonTemplate.events.on("out", function(event) {
+    series.mapPolygons.each(function(mapPolygon) {
+      mapPolygon.isHover = false;
+    })
+  })
+
+  // States  
+  var hoverState = mapPolygonTemplate.states.create("hover");
+  hoverState.properties.fill = am4core.color("#e8115d");
+
+  // Tooltip
+  mapPolygonTemplate.tooltipText = "{CDNAME}"; // enables tooltip
+  // series.tooltip.getFillFromObject = false; // prevents default colorization, which would make all tooltips red on hover
+  // series.tooltip.background.fill = am4core.color(group.color);
+
+  // MapPolygonSeries will mutate the data assigned to it, 
+  // we make and provide a copy of the original data array to leave it untouched.
+  // (This method of copying works only for simple objects, e.g. it will not work
+  //  as predictably for deep copying custom Classes.)
+  series.data = JSON.parse(JSON.stringify(group.data));
+});
+
+
+
+
+// Create map polygon series
+// var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+
+// Make map load polygon (like country names) data from GeoJSON
 polygonSeries.useGeodata = true;
 
-// country area look and behavior
-var polygonTemplate = polygonSeries.mapPolygons.template;
-polygonTemplate.strokeOpacity = 1;
-polygonTemplate.stroke = am4core.color("#ffffff");
-polygonTemplate.fillOpacity = 0.5;
-polygonTemplate.tooltipText = "{name}";
+console.table(am4geodata_region_canada_bcLow)
+// Configure series
+// var polygonTemplate = polygonSeries.mapPolygons.template;
+// polygonTemplate.tooltipText = "{id}";
+// polygonTemplate.fill = am4core.color("#74B266");
 
-// desaturate filter for countries
-var desaturateFilter = new am4core.DesaturateFilter();
-desaturateFilter.saturation = 0.25;
-polygonTemplate.filters.push(desaturateFilter);
-
-// take a color from color set
-polygonTemplate.adapter.add("fill", function (fill, target) {
-    return colorSet.getIndex(target.dataItem.index + 1);
-})
-
-// set fillOpacity to 1 when hovered
-var hoverState = polygonTemplate.states.create("hover");
-hoverState.properties.fillOpacity = 1;
-
-// what to do when country is clicked
-polygonTemplate.events.on("hit", function (event) {
-    event.target.zIndex = 1000000;
-    selectPolygon(event.target);
-})
-
-// Pie chart
-var pieChart = chart.seriesContainer.createChild(am4charts.PieChart);
-// Set width/heigh of a pie chart for easier positioning only
-pieChart.width = 100;
-pieChart.height = 100;
-pieChart.hidden = true; // can't use visible = false!
-
-// because defauls are 50, and it's not good with small countries
-pieChart.chartContainer.minHeight = 1;
-pieChart.chartContainer.minWidth = 1;
-
-var pieSeries = pieChart.series.push(new am4charts.PieSeries());
-pieSeries.dataFields.value = "value";
-pieSeries.dataFields.category = "category";
-pieSeries.data = [{ value: 100, category: "First" }, { value: 20, category: "Second" }, { value: 10, category: "Third" }];
-
-var dropShadowFilter = new am4core.DropShadowFilter();
-dropShadowFilter.blur = 4;
-pieSeries.filters.push(dropShadowFilter);
-
-var sliceTemplate = pieSeries.slices.template;
-sliceTemplate.fillOpacity = 1;
-sliceTemplate.strokeOpacity = 0;
-
-var activeState = sliceTemplate.states.getKey("active");
-activeState.properties.shiftRadius = 0; // no need to pull on click, as country circle under the pie won't make it good
-
-var sliceHoverState = sliceTemplate.states.getKey("hover");
-sliceHoverState.properties.shiftRadius = 0; // no need to pull on click, as country circle under the pie won't make it good
-
-// we don't need default pie chart animation, so change defaults
-var hiddenState = pieSeries.hiddenState;
-hiddenState.properties.startAngle = pieSeries.startAngle;
-hiddenState.properties.endAngle = pieSeries.endAngle;
-hiddenState.properties.opacity = 0;
-hiddenState.properties.visible = false;
-
-// series labels
-var labelTemplate = pieSeries.labels.template;
-labelTemplate.nonScaling = true;
-labelTemplate.fill = am4core.color("#FFFFFF");
-labelTemplate.fontSize = 10;
-labelTemplate.background = new am4core.RoundedRectangle();
-labelTemplate.background.fillOpacity = 0.9;
-labelTemplate.padding(4, 9, 4, 9);
-labelTemplate.background.fill = am4core.color("#7678a0");
-
-// we need pie series to hide faster to avoid strange pause after country is clicked
-pieSeries.hiddenState.transitionDuration = 200;
-
-// country label
-var countryLabel = chart.chartContainer.createChild(am4core.Label);
-countryLabel.text = "Select a country";
-countryLabel.fill = am4core.color("#7678a0");
-countryLabel.fontSize = 40;
-
-countryLabel.hiddenState.properties.dy = 1000;
-countryLabel.defaultState.properties.dy = 0;
-countryLabel.valign = "middle";
-countryLabel.align = "right";
-countryLabel.paddingRight = 50;
-countryLabel.hide(0);
-countryLabel.show();
-
-// select polygon
-function selectPolygon(polygon) {
-    if (morphedPolygon != polygon) {
-        var animation = pieSeries.hide();
-        if (animation) {
-            animation.events.on("animationended", function () {
-                morphToCircle(polygon);
-            })
-        }
-        else {
-            morphToCircle(polygon);
-        }
-    }
-}
-
-// fade out all countries except selected
-function fadeOut(exceptPolygon) {
-    for (var i = 0; i < polygonSeries.mapPolygons.length; i++) {
-        var polygon = polygonSeries.mapPolygons.getIndex(i);
-        if (polygon != exceptPolygon) {
-            polygon.defaultState.properties.fillOpacity = 0.5;
-            polygon.animate([{ property: "fillOpacity", to: 0.5 }, { property: "strokeOpacity", to: 1 }], polygon.polygon.morpher.morphDuration);
-        }
-    }
-}
-
-function zoomOut() {
-    if (morphedPolygon) {
-        pieSeries.hide();
-        morphBack();
-        fadeOut();
-        countryLabel.hide();
-        morphedPolygon = undefined;
-    }
-}
-
-function morphBack() {
-    if (morphedPolygon) {
-        morphedPolygon.polygon.morpher.morphBack();
-        var dsf = morphedPolygon.filters.getIndex(0);
-        dsf.animate({ property: "saturation", to: 0.25 }, morphedPolygon.polygon.morpher.morphDuration);
-    }
-}
-
-function morphToCircle(polygon) {
-
-
-    var animationDuration = polygon.polygon.morpher.morphDuration;
-    // if there is a country already morphed to circle, morph it back
-    morphBack();
-    // morph polygon to circle
-    polygon.toFront();
-    polygon.polygon.morpher.morphToSingle = true;
-    var morphAnimation = polygon.polygon.morpher.morphToCircle();
-
-    polygon.strokeOpacity = 0; // hide stroke for lines not to cross countries
-
-    polygon.defaultState.properties.fillOpacity = 1;
-    polygon.animate({ property: "fillOpacity", to: 1 }, animationDuration);
-
-    // animate desaturate filter
-    var filter = polygon.filters.getIndex(0);
-    filter.animate({ property: "saturation", to: 1 }, animationDuration);
-
-    // save currently morphed polygon
-    morphedPolygon = polygon;
-
-    // fade out all other
-    fadeOut(polygon);
-
-    // hide country label
-    countryLabel.hide();
-
-    if (morphAnimation) {
-        morphAnimation.events.on("animationended", function () {
-            zoomToCountry(polygon);
-        })
-    }
-    else {
-        zoomToCountry(polygon);
-    }
-}
-
-function zoomToCountry(polygon) {
-    var zoomAnimation = chart.zoomToMapObject(polygon, 2.2, true);
-    if (zoomAnimation) {
-        zoomAnimation.events.on("animationended", function () {
-            showPieChart(polygon);
-        })
-    }
-    else {
-        showPieChart(polygon);
-    }
-}
-
-
-function showPieChart(polygon) {
-    polygon.polygon.measure();
-    var radius = polygon.polygon.measuredWidth / 2 * polygon.globalScale / chart.seriesContainer.scale;
-    pieChart.width = radius * 2;
-    pieChart.height = radius * 2;
-    pieChart.radius = radius;
-
-    var centerPoint = am4core.utils.spritePointToSvg(polygon.polygon.centerPoint, polygon.polygon);
-    centerPoint = am4core.utils.svgPointToSprite(centerPoint, chart.seriesContainer);
-
-    pieChart.x = centerPoint.x - radius;
-    pieChart.y = centerPoint.y - radius;
-
-    var fill = polygon.fill;
-    var desaturated = fill.saturate(0.3);
-
-    for (var i = 0; i < pieSeries.dataItems.length; i++) {
-        var dataItem = pieSeries.dataItems.getIndex(i);
-        dataItem.value = Math.round(Math.random() * 100);
-        dataItem.slice.fill = am4core.color(am4core.colors.interpolate(
-            fill.rgb,
-            am4core.color("#ffffff").rgb,
-            0.2 * i
-        ));
-
-        dataItem.label.background.fill = desaturated;
-        dataItem.tick.stroke = fill;
-    }
-
-    pieSeries.show();
-    pieChart.show();
-
-    countryLabel.text = "{name}";
-    countryLabel.dataItem = polygon.dataItem;
-    countryLabel.fill = desaturated;
-    countryLabel.show();
-}
+// Create hover state and set alternative fill color
+// var hs = polygonTemplate.states.create("hover");
+// hs.properties.fill = am4core.color("#367B25");
